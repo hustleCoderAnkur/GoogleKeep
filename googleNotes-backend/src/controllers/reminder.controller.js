@@ -6,19 +6,23 @@ import { Note } from "../Models/notes.modal.js";
 import { Reminder } from "../Models/reminder.modal.js";
 
 const createReminder = asyncHandler(async (req, res) => {
+
     const { noteId } = req.params
     const { reminderDate } = req.body
 
     if (!isValidObjectId(noteId)) {
         throw new ApiError(400, "noteId not found")
     }
+
     if (!reminderDate) {
         throw new ApiError(400, "there is No reminderDate")
     }
+
     const note = await Note.findOne({
         _id: noteId,
         userId: req.user._id
     })
+
     if (!note) {
         throw new ApiError(404, "Note not found")
     }
@@ -77,6 +81,7 @@ const updateReminders = asyncHandler(async (req, res) => {
 })
 
 const deleteReminder = asyncHandler(async (req, res) => {
+    
     const { id } = req.params
 
     if (isValidObjectId(id)) {
