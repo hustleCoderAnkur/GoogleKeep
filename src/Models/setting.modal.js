@@ -32,6 +32,10 @@ const settingsSchema = new Schema({
         type: [String],
         enum: ["morning", "afternoon", "evening"],
         default: ["morning"],
+        validate: {
+            validator: (val) => val.length > 0,
+            message: "At least one reminder preference required"
+        }
     },
 }, { timestamps: true });
 
