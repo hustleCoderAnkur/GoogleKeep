@@ -15,7 +15,7 @@ const reminderSchema = new Schema({
         type: Boolean,
         default:true
     },
-    reminderDate: {
+    reminder: {
         type: Date,
         required:true
     }
