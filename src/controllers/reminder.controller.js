@@ -6,6 +6,7 @@ import { Note } from "../Models/notes.modal.js";
 import { Reminder } from "../Models/reminder.modal.js";
 
 const createReminder = asyncHandler(async (req, res) => {
+
     const { noteId, reminderDate } = req.body
 
     if (!isValidObjectId(noteId)) {
@@ -76,8 +77,8 @@ const updateReminders = asyncHandler(async (req, res) => {
 })
 
 const deleteReminder = asyncHandler(async (req, res) => {
-    const { id } = req.params
 
+    const { id } = req.params
     if (isValidObjectId(id)) {
         throw new ApiError(400, "Invalid reminder ID")
     }
