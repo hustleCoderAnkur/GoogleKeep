@@ -1,12 +1,11 @@
-import mongoose from "mongoose";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import mongoose from "mongoose"
+import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/apiError.js"
 import { ApiResponse } from "../utils/apiResponse.js"
 import { User } from "../Models/user.modal.js"
 import { Note } from "../Models/notes.modal.js"
 import jwt from "jsonwebtoken"
-import ACCESS from "../../config.js"
-import REFRESH from "../../config.js"
+import { REFRESH } from "../../config.js"
 
 const generateAccessAndRefreshTokens = async (userId) => {
 
@@ -89,9 +88,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({
         $or: [
-            { username: username.toLowerCase() },
-            { email: email.toLowerCase() }
-        ]
+            username ? { username: username.toLowerCase() } : null,
+            email ? { email: email.toLowerCase() } : null
+        ].filter(Boolean)
     })
 
     if (!user) {
@@ -165,7 +164,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
-            ACCESS,
             REFRESH
         )
 
@@ -185,6 +183,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
+
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)
@@ -226,6 +225,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
+
     const { username, email, mobileNumber, } = req.body
 
     if (!username || !email || !mobileNumber) {

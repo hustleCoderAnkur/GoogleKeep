@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -10,7 +10,7 @@ const validateId = (id) => {
         throw new ApiError(400, "Invalid ID format");
     }
     return id;
-};
+}
 
 const createNote = asyncHandler(async (req, res) => {
 
@@ -24,7 +24,7 @@ const createNote = asyncHandler(async (req, res) => {
     } = req.body;
 
     if (!title && (!content || content.length === 0)) {
-        throw new ApiError(400, "Title or content required")
+        throw new ApiError(400, "Title or content required");
     }
 
     const note = await Note.create({
@@ -35,11 +35,11 @@ const createNote = asyncHandler(async (req, res) => {
         labels: labels || [],
         isPinned: isPinned || false,
         isArchived: isArchived || false,
-    });
+    })
 
     return res
         .status(201)
-        .json(new ApiResponse(201, note, "Note created successfully"))
+        .json(new ApiResponse(201, note, "Note created successfully"));
 })
 
 const updateNote = asyncHandler(async (req, res) => {
@@ -115,12 +115,12 @@ const getAllNotes = asyncHandler(async (req, res) => {
                 }
             }
         }
-    ])
+    ]);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, notes, "Notes fetched successfully"))
-})
+        .json(new ApiResponse(200, notes, "Notes fetched successfully"));
+});
 
 const getArchivedNotes = asyncHandler(async (req, res) => {
     const notes = await Note.find({
@@ -131,26 +131,26 @@ const getArchivedNotes = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, notes, "Archived notes fetched successfully"))
+        .json(new ApiResponse(200, notes, "Archived notes fetched successfully"));
 });
 
 const deleteNote = asyncHandler(async (req, res) => {
-    const { id } = req.params
-    validateId(id)
+    const { id } = req.params;
+    validateId(id);
 
     const note = await Note.findOneAndUpdate(
         { _id: id, user: req.user._id, isDeleted: false },
         { isDeleted: true },
         { new: true }
-    );
+    )
 
     if (!note) {
-        throw new ApiError(404, "Note not found or unauthorized")
+        throw new ApiError(404, "Note not found or unauthorized");
     }
 
     return res
         .status(200)
-        .json(new ApiResponse(200, null, "Note deleted successfully"))
+        .json(new ApiResponse(200, null, "Note deleted successfully"));
 });
 
 const trashNote = asyncHandler(async (req, res) => {
@@ -161,12 +161,12 @@ const trashNote = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, deletedNotes, "Trash notes fetched"))
+        .json(new ApiResponse(200, deletedNotes, "Trash notes fetched"));
 });
 
 const restoreNote = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    validateId(id)
+    validateId(id);
 
     const note = await Note.findOneAndUpdate(
         { _id: id, user: req.user._id, isDeleted: true },
@@ -180,12 +180,12 @@ const restoreNote = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, note, "Note restored successfully"))
+        .json(new ApiResponse(200, note, "Note restored successfully"));
 });
 
 const permanentDelete = asyncHandler(async (req, res) => {
     const { id } = req.params
-    validateId(id);
+    validateId(id)
 
     const note = await Note.findOneAndDelete({
         _id: id,
@@ -217,8 +217,8 @@ const addCollaborator = asyncHandler(async (req, res) => {
     const { noteId } = req.params;
     const { userId, permission } = req.body;
     validateId(noteId);
-    
-    const userExists = await User.findById(userId);
+
+    const userExists = await User.findById(userId)
     if (!userExists) {
         throw new ApiError(404, "User not found")
     }
@@ -232,7 +232,7 @@ const addCollaborator = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Note not found or unauthorized")
     }
 
-    
+
     const alreadyExists = note.collaborators.some(
         collab => collab.user.toString() === userId
     );
@@ -242,7 +242,7 @@ const addCollaborator = asyncHandler(async (req, res) => {
     }
 
     note.collaborators.push({ user: userId, permission })
-    await note.save();
+    await note.save()
 
     return res
         .status(200)
@@ -250,13 +250,13 @@ const addCollaborator = asyncHandler(async (req, res) => {
 });
 
 const removeCollaborator = asyncHandler(async (req, res) => {
-    const { noteId, userId } = req.params;
-    validateId(noteId);
+    const { noteId, userId } = req.params
+    validateId(noteId)
 
     const note = await Note.findOne({
         _id: noteId,
         user: req.user._id
-    });
+    })
 
     if (!note) {
         throw new ApiError(404, "Note not found or unauthorized")
@@ -266,7 +266,7 @@ const removeCollaborator = asyncHandler(async (req, res) => {
         collab => collab.user.toString() !== userId
     );
 
-    await note.save();
+    await note.save()
 
     return res
         .status(200)

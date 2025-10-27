@@ -37,6 +37,6 @@ const settingsSchema = new Schema({
             message: "At least one reminder preference required"
         }
     },
-}, { timestamps: true });
+}, { timestamps: true })
 
 export const Settings = mongoose.model("Settings", settingsSchema);

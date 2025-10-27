@@ -4,21 +4,21 @@ const reminderSchema = new Schema({
     noteId: {
         type: Schema.Types.ObjectId,
         ref: 'Note',
-        required:true
+        required: true
     },
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required:true
+        required: true
     },
     isActive: {
         type: Boolean,
-        default:true
+        default: true
     },
-    reminder: {
+    reminderDate: {
         type: Date,
-        required:true
+        required: true
     }
 }, { timestamps: true })
 
-export const Reminder = mongoose.model('Reminder',reminderSchema)
+export const Reminder = mongoose.model('Reminder', reminderSchema)

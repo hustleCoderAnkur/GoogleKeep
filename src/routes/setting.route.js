@@ -12,3 +12,4 @@ settingRouter.get("/getUserSetting", getUserSetting)
 settingRouter.put("/updateSetting", updateSetting)
 
 export default settingRouter
+

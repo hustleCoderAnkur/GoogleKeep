@@ -40,7 +40,7 @@ const noteSchema = new Schema({
         type: String,
         trim: true
     },
-    content: [blockSchema], 
+    content: [blockSchema],
     type: {
         type: String,
         enum: ["text", "image", "audio", "list", "drawing"],
