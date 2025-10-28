@@ -16,21 +16,23 @@ function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
                     <div className="flex items-center gap-4 flex-1">
 
                         <button onClick={() => setIsSideOpen(!isSideOpen)} className="p-3 hover:bg-gray-100 rounded-full transition">
-                            <Menu size={24} className="text-gray-700" />
+                            <Menu size={24} className="text-gray-700"/>
                         </button>
 
-                        <img src="/keepLogo.png" alt="Keep Logo" className="w-10 h-10" />
+                        <img src="/keepLogo.png" alt="Keep Logo" className="w-10 h-10"/>
                         <h1 className="text-xl text-gray-700 font-normal">Keep</h1>
                         <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2 flex-1 max-w-2xl hover:bg-gray-200 transition">
-                            <Search size={20} className="text-gray-600 mr-3" />
+                            <Search size={20} className="text-gray-600 mr-3"/>
+
                             <input
                                 type="text"
                                 placeholder="Search"
                                 className="bg-transparent outline-none w-full text-gray-700"
                             />
                         </div>
+
                         <button className="p-3 hover:bg-gray-100 rounded-full transition">
-                            <CirclePlusIcon size={25} className="text-gray-700" />
+                            <CirclePlusIcon size={25} className="text-gray-700"/>
                         </button>
                     </div>
 
