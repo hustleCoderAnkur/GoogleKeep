@@ -19,7 +19,9 @@ function Dashboard({ isOpen }:{ isOpen: boolean }) {
     ];
 
     return (
+
         <div className="flex">
+            
             <aside
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
@@ -27,10 +29,12 @@ function Dashboard({ isOpen }:{ isOpen: boolean }) {
           ${isOpen || isHovered ? "w-64" : "w-20"}`}
             >
                 <nav className="py-2">
+
                     {sidebarItems.map((item, index) => {
                         const Icon = item.icon;
 
                         return (
+
                             <button
                                 key={index}
                                 className="w-full flex items-center gap-4 px-6 py-3 hover:bg-gray-200 rounded-r-full transition-all duration-200 group"
@@ -45,6 +49,7 @@ function Dashboard({ isOpen }:{ isOpen: boolean }) {
                                         {item.label}
                                     </h2>
                                 )}
+
                             </button>
                         )
                     })}

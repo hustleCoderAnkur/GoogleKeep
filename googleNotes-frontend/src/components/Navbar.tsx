@@ -8,6 +8,7 @@ interface MenuBarProps{
 
 function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
     const [row, setRow] = useState(true)
+
     return (
         <>
             <nav className="bg-white border-b border-gray-200 shadow-sm">
@@ -29,11 +30,13 @@ function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
                                 placeholder="Search"
                                 className="bg-transparent outline-none w-full text-gray-700"
                             />
+
                         </div>
 
                         <button className="p-3 hover:bg-gray-100 rounded-full transition">
                             <CirclePlusIcon size={25} className="text-gray-700"/>
                         </button>
+
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -60,6 +63,7 @@ function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
                         <button className="p-2 hover:bg-gray-100 rounded-full transition">
                             <CircleUser size={32} className="text-gray-700" />
                         </button>
+                        
                     </div>
                 </div>
             </nav>
