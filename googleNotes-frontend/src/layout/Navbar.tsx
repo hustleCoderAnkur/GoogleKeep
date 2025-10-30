@@ -1,5 +1,6 @@
 import { Menu, RotateCw, Search, Grid2X2, CirclePlusIcon, Rows2, Settings, Grip, CircleUser } from "lucide-react"
 import { useState } from "react"
+import Button from "../components/Button"
 
 interface MenuBarProps{
     isSideOpen: boolean,
@@ -16,9 +17,9 @@ function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
 
                     <div className="flex items-center gap-4 flex-1">
 
-                        <button onClick={() => setIsSideOpen(!isSideOpen)} className="p-3 hover:bg-gray-100 rounded-full transition">
+                        <Button onClick={() => setIsSideOpen(!isSideOpen)}>
                             <Menu size={24} className="text-gray-700"/>
-                        </button>
+                        </Button>
 
                         <img src="/keepLogo.png" alt="Keep Logo" className="w-10 h-10"/>
                         <h1 className="text-xl text-gray-700 font-normal">Keep</h1>
@@ -33,36 +34,36 @@ function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
 
                         </div>
 
-                        <button className="p-3 hover:bg-gray-100 rounded-full transition">
+                        <Button>
                             <CirclePlusIcon size={25} className="text-gray-700"/>
-                        </button>
+                        </Button>
 
                     </div>
 
                     <div className="flex items-center gap-2">
 
-                        <button onClick={()=>setRow(!row)} className="p-3 hover:bg-gray-100 rounded-full transition flex items-center gap-1">
+                        <Button onClick={()=>setRow(!row)} className="flex items-center gap-1">
                             {row ?
                                 (<Rows2 size={20} className="text-gray-700" />):
                                 (<Grid2X2 size={20} className="text-gray-700" />)
                             }
-                        </button>
+                        </Button>
 
-                        <button className="p-3 hover:bg-gray-100 rounded-full transition">
+                        <Button>
                             <Grip size={20} className="text-gray-700" />
-                        </button>
+                        </Button>
 
-                        <button className="p-3 hover:bg-gray-100 rounded-full transition">
+                        <Button>
                             <RotateCw size={20} className="text-gray-700" />
-                        </button>
+                        </Button>
 
-                        <button className="p-3 hover:bg-gray-100 rounded-full transition">
+                        <Button>
                             <Settings size={20} className="text-gray-700" />
-                        </button>
+                        </Button>
 
-                        <button className="p-2 hover:bg-gray-100 rounded-full transition">
+                        <Button>
                             <CircleUser size={32} className="text-gray-700" />
-                        </button>
+                        </Button>
                         
                     </div>
                 </div>
