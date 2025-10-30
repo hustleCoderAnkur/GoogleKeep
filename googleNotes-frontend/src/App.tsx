@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Dashboard from "./components/Dashboard";
-import Navbar from "./components/Navbar";
+import Dashboard from "./layout/Dashboard";
+import Navbar from "./layout/Navbar";
 
 function App() {
   const [isSideOpen, setIsSideOpen] = useState(true);
