@@ -1,6 +1,7 @@
 import { Menu, RotateCw, Search, Grid2X2, CirclePlusIcon, Rows2, Settings, Grip, CircleUser } from "lucide-react"
 import { useState } from "react"
 import Button from "../components/Button"
+import Input from "../components/Input"
 
 interface MenuBarProps{
     isSideOpen: boolean,
@@ -26,10 +27,11 @@ function Navbar({ isSideOpen, setIsSideOpen }: MenuBarProps) {
                         <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2 flex-1 max-w-2xl hover:bg-gray-200 transition">
                             <Search size={20} className="text-gray-600 mr-3"/>
 
-                            <input
-                                type="text"
+                            <Input
+                                background="bg-transparent"
+                                outline="outline-none"
                                 placeholder="Search"
-                                className="bg-transparent outline-none w-full text-gray-700"
+                                className="w-full text-gray-700"
                             />
 
                         </div>
