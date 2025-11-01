@@ -34,8 +34,8 @@ function NoteCreate() {
                         </div>
                     </div>
                 ) : (
-                        <div className="relative bg-white border border-gray-300 rounded-lg shadow-sm p-4">
-                            
+                    <div className="relative bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+                    
                         <div className="absolute top-2 right-2">
                             <Pin className="w-5 h-5 text-gray-600 cursor-pointer hover:text-gray-900" />
                         </div>
@@ -44,15 +44,11 @@ function NoteCreate() {
                             ref={editorRef}
                             contentEditable
                             suppressContentEditableWarning
-                            className="w-full min-h-[100px] text-gray-800 outline-none mb-4"
+                            className="w-full min-h-[100px] text-gray-800 outline-none mb-4 pr-8"
                             data-placeholder="Take a note..."
-                            >
-    
-                            <h1>Title</h1>
-                            <p>take a note...</p>
-                            
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        />
 
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                             <div className="flex items-center gap-3">
                                 <Baseline className="w-5 h-5 mr-4 text-gray-600 cursor-pointer hover:text-gray-900" />
                                 <Palette className="w-5 h-5 mr-4 text-gray-600 cursor-pointer hover:text-gray-900" />
@@ -68,10 +64,9 @@ function NoteCreate() {
                             <Button
                                 onClick={() => setTexts(false)}
                                 className="text-sm font-medium text-gray-700 cursor-pointer hover:text-gray-900 px-4 py-1"
-                                >
+                            >
                                 Close
                             </Button>
-                            </div>
                         </div>
                     </div>
                 )}
