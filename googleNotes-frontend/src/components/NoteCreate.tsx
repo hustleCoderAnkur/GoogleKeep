@@ -15,18 +15,48 @@ import {
     Undo2,
     User,
     UserPlus,
+    Baseline,
+    Heading1,
+    Heading2,
+    CaseSensitive,
+    Bold,
+    Italic,
+    Underline,
+    RemoveFormatting,
 } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+
+
+interface ToolButtonProps {
+    icon: React.ElementType;
+    onClick?: () => void;
+    disabled?: boolean;
+    label?: string;
+}
+
+interface DropdownProps {
+    children: React.ReactNode;
+    onClose: () => void;
+}
+
+interface DropdownItemProps {
+    icon?: React.ElementType;
+    children: React.ReactNode;
+}
+
+interface FormatButtonProps {
+    icon: React.ElementType;
+    label: string;
+}
 
 function NoteCreate() {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [title, setTitle] = useState("");
-
     const [isReminderOpen, setIsReminderOpen] = useState(false);
     const [isCollaboratorOpen, setIsCollaboratorOpen] = useState(false);
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-
+    const [isTextFormatOpen, setIsTextFormatOpen] = useState(false);
     const [history, setHistory] = useState<string[]>([""]);
     const [historyIndex, setHistoryIndex] = useState(0);
     const [showArchived, setShowArchived] = useState(false);
@@ -36,25 +66,123 @@ function NoteCreate() {
     const titleRef = useRef<HTMLInputElement>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const timeoutRef = useRef<null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  
+    const handleInput = useCallback(() => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        timeoutRef.current = setTimeout(() => {
+            const content = editorRef.current?.innerHTML || "";
+            if (content !== history[historyIndex]) {
+                const newHistory = history.slice(0, historyIndex + 1);
+                newHistory.push(content);
+                if (newHistory.length > 50) newHistory.shift();
+                else setHistoryIndex((prev) => prev + 1);
+                setHistory(newHistory);
+            }
+        }, 300);
+    }, [history, historyIndex]);
+
+    const handleUndo = useCallback(() => {
+        if (historyIndex > 0) {
+            const prevIndex = historyIndex - 1;
+            setHistoryIndex(prevIndex);
+            if (editorRef.current) editorRef.current.innerHTML = history[prevIndex];
+        }
+    }, [historyIndex, history]);
+
+    const handleRedo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            const nextIndex = historyIndex + 1;
+            setHistoryIndex(nextIndex);
+            if (editorRef.current) editorRef.current.innerHTML = history[nextIndex];
+        }
+    }, [historyIndex, history]);
+
+    const handleClose = useCallback(() => {
+        const trimmedTitle = title.trim();
+        const trimmedContent = editorRef.current?.textContent?.trim() || "";
+
+        if (trimmedTitle || trimmedContent || images.length > 0) {
+            console.log("Saving note:", {
+                title: trimmedTitle,
+                content: trimmedContent,
+                images,
+                isPinned,
+            });
+        }
+
+        setIsExpanded(false);
+        setTitle("");
+        setIsPinned(false);
+        setImages([]);
+        setHistory([""]);
+        setHistoryIndex(0);
+        setIsReminderOpen(false);
+        setIsCollaboratorOpen(false);
+        setIsMoreMenuOpen(false);
+        setIsTextFormatOpen(false);
+        if (editorRef.current) editorRef.current.innerHTML = "";
+    }, [title, images, isPinned]);
+
+    const closeAllDropdowns = useCallback(() => {
+        setIsReminderOpen(false);
+        setIsCollaboratorOpen(false);
+        setIsMoreMenuOpen(false);
+        setIsTextFormatOpen(false);
+    }, []);
+
+    const handleArchive = useCallback(() => {
+        setShowArchived(true);
+        setTimeout(() => {
+            setShowArchived(false);
+            handleClose();
+        }, 2000);
+    }, [handleClose]);
+
+    const handleImageUpload = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            const files = e.target.files;
+            if (files) {
+                Array.from(files).forEach((file) => {
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert("File size must be less than 5MB");
+                        return;
+                    }
+                    if (file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            setImages((prev) => [...prev, event.target?.result as string]);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            e.target.value = "";
+        },
+        []
+    );
+
+    const removeImage = (index: number) => {
+        setImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+ 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 if (isExpanded) handleClose();
             }
         };
-
         if (isExpanded) {
             document.addEventListener("mousedown", handleClickOutside);
             return () => document.removeEventListener("mousedown", handleClickOutside);
         }
-    }, [isExpanded, title]);
+    }, [isExpanded, handleClose]);
 
     useEffect(() => {
-        if (isExpanded && titleRef.current) {
-            titleRef.current.focus();
-        }
+        if (isExpanded && titleRef.current) titleRef.current.focus();
     }, [isExpanded]);
 
     useEffect(() => {
@@ -77,104 +205,7 @@ function NoteCreate() {
             document.addEventListener("keydown", handleKeyDown);
             return () => document.removeEventListener("keydown", handleKeyDown);
         }
-    }, [isExpanded, historyIndex, history]);
-
-    const handleInput = useCallback(() => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-        timeoutRef.current = setTimeout(() => {
-            const content = editorRef.current?.innerHTML || "";
-            if (content !== history[historyIndex]) {
-                const newHistory = history.slice(0, historyIndex + 1);
-                newHistory.push(content);
-
-                if (newHistory.length > 50) {
-                    newHistory.shift();
-                } else {
-                    setHistoryIndex(prev => prev + 1);
-                }
-                setHistory(newHistory);
-            }
-        }, 300);
-    }, [history, historyIndex]);
-
-    const handleUndo = useCallback(() => {
-        if (historyIndex > 0) {
-            const prevIndex = historyIndex - 1;
-            setHistoryIndex(prevIndex);
-            if (editorRef.current) {
-                editorRef.current.innerHTML = history[prevIndex];
-            }
-        }
-    }, [historyIndex, history]);
-
-    const handleRedo = useCallback(() => {
-        if (historyIndex < history.length - 1) {
-            const nextIndex = historyIndex + 1;
-            setHistoryIndex(nextIndex);
-            if (editorRef.current) {
-                editorRef.current.innerHTML = history[nextIndex];
-            }
-        }
-    }, [historyIndex, history]);
-
-    const handleArchive = () => {
-        setShowArchived(true);
-        setTimeout(() => {
-            setShowArchived(false);
-            handleClose();
-        }, 2000);
-    };
-
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (files) {
-            Array.from(files).forEach((file) => {
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('File size must be less than 5MB');
-                    return;
-                }
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        setImages((prev) => [...prev, event.target?.result as string]);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-        e.target.value = '';
-    };
-
-    const removeImage = (index: number) => {
-        setImages((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    const handleClose = () => {
-        const trimmedTitle = title.trim();
-        const trimmedContent = editorRef.current?.textContent?.trim() || "";
-
-        if (trimmedTitle || trimmedContent || images.length > 0) {
-            console.log('Saving note:', { title: trimmedTitle, content: trimmedContent, images, isPinned });
-        }
-
-        setIsExpanded(false);
-        setTitle("");
-        setIsPinned(false);
-        setImages([]);
-        setHistory([""]);
-        setHistoryIndex(0);
-        setIsReminderOpen(false);
-        setIsCollaboratorOpen(false);
-        setIsMoreMenuOpen(false);
-        if (editorRef.current) editorRef.current.innerHTML = "";
-    };
-
-    const closeAllDropdowns = () => {
-        setIsReminderOpen(false);
-        setIsCollaboratorOpen(false);
-        setIsMoreMenuOpen(false);
-    };
+    }, [isExpanded, handleUndo, handleRedo, handleClose]);
 
     if (!isExpanded) {
         return (
@@ -186,15 +217,9 @@ function NoteCreate() {
                     >
                         <p className="text-gray-600 text-base">Take a note...</p>
                         <div className="flex items-center gap-4">
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New list">
-                                <CheckSquare size={20} className="text-gray-600" />
-                            </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with drawing">
-                                <Brush size={20} className="text-gray-600" />
-                            </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with image">
-                                <ImagePlus size={20} className="text-gray-600" />
-                            </button>
+                            <ToolButton icon={CheckSquare} label="New list" />
+                            <ToolButton icon={Brush} label="New note with drawing" />
+                            <ToolButton icon={ImagePlus} label="New note with image" />
                         </div>
                     </div>
                 </div>
@@ -261,6 +286,36 @@ function NoteCreate() {
                                 className="hidden"
                             />
 
+                        
+                            <div className="relative">
+                                <ToolButton
+                                    icon={Baseline}
+                                    onClick={() => {
+                                        closeAllDropdowns();
+                                        setIsTextFormatOpen(!isTextFormatOpen);
+                                    }}
+                                    label="Text formatting"
+                                />
+                                {isTextFormatOpen && (
+                                    <Dropdown onClose={() => setIsTextFormatOpen(false)}>
+                                        <div className="p-2">
+                                            <div className="flex items-center gap-1 mb-2 pb-2 border-b border-gray-200">
+                                                <FormatButton icon={Heading1} label="Heading 1" />
+                                                <FormatButton icon={Heading2} label="Heading 2" />
+                                                <FormatButton icon={CaseSensitive} label="Normal text" />
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <FormatButton icon={Bold} label="Bold" />
+                                                <FormatButton icon={Italic} label="Italic" />
+                                                <FormatButton icon={Underline} label="Underline" />
+                                                <FormatButton icon={RemoveFormatting} label="Remove formatting" />
+                                            </div>
+                                        </div>
+                                    </Dropdown>
+                                )}
+                            </div>
+
+            
                             <div className="relative">
                                 <ToolButton
                                     icon={Bell}
@@ -287,6 +342,7 @@ function NoteCreate() {
                                 )}
                             </div>
 
+                        
                             <div className="relative">
                                 <ToolButton
                                     icon={UserPlus}
@@ -317,19 +373,17 @@ function NoteCreate() {
                                             </div>
                                             <div className="flex justify-end gap-2 mt-4">
                                                 <button className="px-4 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                                                <button className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+                                                <button className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">
+                                                    Save
+                                                </button>
                                             </div>
                                         </div>
                                     </Dropdown>
                                 )}
                             </div>
 
-                            <ToolButton icon={Palette} onClick={() => { }} label="Background options" />
-                            <ToolButton
-                                icon={Image}
-                                onClick={() => fileInputRef.current?.click()}
-                                label="Add image"
-                            />
+                            <ToolButton icon={Palette} label="Background options" />
+                            <ToolButton icon={Image} onClick={() => fileInputRef.current?.click()} label="Add image" />
                             <ToolButton icon={Archive} onClick={handleArchive} label="Archive" />
 
                             <div className="relative">
@@ -387,54 +441,59 @@ function NoteCreate() {
             </div>
         </div>
     );
+    
+    function ToolButton({ icon: Icon, onClick, disabled = false, label }: ToolButtonProps) {
+        return (
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                className={`p-2 rounded-full transition-colors ${disabled ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100 cursor-pointer"
+                    }`}
+                title={label}
+            >
+                <Icon size={18} className="text-gray-600" />
+            </button>
+        );
+    }
+
+    function Dropdown({ children, onClose }: DropdownProps) {
+        const ref = useRef<HTMLDivElement>(null);
+    
+        useEffect(() => {
+            const handleClick = (e: MouseEvent) => {
+                if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+            };
+            document.addEventListener("mousedown", handleClick);
+            return () => document.removeEventListener("mousedown", handleClick);
+        }, [onClose]);
+    
+        return (
+            <div
+                ref={ref}
+                className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
+            >
+                {children}
+            </div>
+        );
+    }
+
+    function DropdownItem({ icon: Icon, children }: DropdownItemProps) {
+        return (
+            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
+                {Icon && <Icon size={16} className="text-gray-600" />}
+                {children}
+            </button>
+        );
+    }
+
+    function FormatButton({ icon: Icon, label }: FormatButtonProps) {
+        return (
+            <button className="p-2 hover:bg-gray-100 rounded transition-colors" title={label}>
+                <Icon size={18} className="text-gray-700" />
+            </button>
+
+        )
+    }
 }
 
-function ToolButton({ icon: Icon, onClick, disabled = false, label }: any) {
-    return (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            className={`p-2 rounded-full transition-colors ${disabled
-                    ? "opacity-30 cursor-not-allowed"
-                    : "hover:bg-gray-100 cursor-pointer"
-                }`}
-            title={label}
-        >
-            <Icon size={18} className="text-gray-600" />
-        </button>
-    );
-}
-
-function Dropdown({ children, onClose }: any) {
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
-                onClose();
-            }
-        };
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, [onClose]);
-
-    return (
-        <div
-            ref={ref}
-            className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
-        >
-            {children}
-        </div>
-    );
-}
-
-function DropdownItem({ icon: Icon, children }: any) {
-    return (
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
-            {Icon && <Icon size={16} className="text-gray-600" />}
-            {children}
-        </button>
-    );
-}
-
-export default NoteCreate;
+export default NoteCreate
