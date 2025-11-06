@@ -15,7 +15,7 @@ import {
     Undo2,
     User,
     UserPlus,
-    Baseline,
+    Type,
     Heading1,
     Heading2,
     CaseSensitive,
@@ -23,15 +23,15 @@ import {
     Italic,
     Underline,
     RemoveFormatting,
+    Check,
 } from "lucide-react";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-
+import { useState, useRef, useEffect, useCallback } from "react";
 
 interface ToolButtonProps {
-    icon: React.ElementType;
-    onClick?: () => void;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    onClick: () => void;
     disabled?: boolean;
-    label?: string;
+    label: string;
 }
 
 interface DropdownProps {
@@ -40,23 +40,34 @@ interface DropdownProps {
 }
 
 interface DropdownItemProps {
-    icon?: React.ElementType;
+    icon?: React.ComponentType<{ size?: number; className?: string }>;
     children: React.ReactNode;
 }
 
 interface FormatButtonProps {
-    icon: React.ElementType;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
     label: string;
+}
+
+interface ColorOption {
+    name: string;
+    bgClass: string;
+    borderClass: string;
+    hex: string;
 }
 
 function NoteCreate() {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [title, setTitle] = useState("");
+    const [bgColor, setBgColor] = useState("bg-white");
+
     const [isReminderOpen, setIsReminderOpen] = useState(false);
     const [isCollaboratorOpen, setIsCollaboratorOpen] = useState(false);
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
     const [isTextFormatOpen, setIsTextFormatOpen] = useState(false);
+    const [isColorOpen, setIsColorOpen] = useState(false);
+
     const [history, setHistory] = useState<string[]>([""]);
     const [historyIndex, setHistoryIndex] = useState(0);
     const [showArchived, setShowArchived] = useState(false);
@@ -66,123 +77,38 @@ function NoteCreate() {
     const titleRef = useRef<HTMLInputElement>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  
-    const handleInput = useCallback(() => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    const colors: ColorOption[] = [
+        { name: 'Default', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
+        { name: 'Red', bgClass: 'bg-red-100', borderClass: 'border-red-200', hex: '#fee2e2' },
+        { name: 'Orange', bgClass: 'bg-orange-100', borderClass: 'border-orange-200', hex: '#ffedd5' },
+        { name: 'Yellow', bgClass: 'bg-yellow-100', borderClass: 'border-yellow-200', hex: '#fef9c3' },
+        { name: 'Green', bgClass: 'bg-green-100', borderClass: 'border-green-200', hex: '#dcfce7' },
+        { name: 'Teal', bgClass: 'bg-teal-100', borderClass: 'border-teal-200', hex: '#ccfbf1' },
+        { name: 'Blue', bgClass: 'bg-blue-100', borderClass: 'border-blue-200', hex: '#dbeafe' },
+        { name: 'Purple', bgClass: 'bg-purple-100', borderClass: 'border-purple-200', hex: '#f3e8ff' },
+        { name: 'Pink', bgClass: 'bg-pink-100', borderClass: 'border-pink-200', hex: '#fce7f3' },
+        { name: 'Gray', bgClass: 'bg-gray-100', borderClass: 'border-gray-300', hex: '#f3f4f6' },
+    ];
 
-        timeoutRef.current = setTimeout(() => {
-            const content = editorRef.current?.innerHTML || "";
-            if (content !== history[historyIndex]) {
-                const newHistory = history.slice(0, historyIndex + 1);
-                newHistory.push(content);
-                if (newHistory.length > 50) newHistory.shift();
-                else setHistoryIndex((prev) => prev + 1);
-                setHistory(newHistory);
-            }
-        }, 300);
-    }, [history, historyIndex]);
-
-    const handleUndo = useCallback(() => {
-        if (historyIndex > 0) {
-            const prevIndex = historyIndex - 1;
-            setHistoryIndex(prevIndex);
-            if (editorRef.current) editorRef.current.innerHTML = history[prevIndex];
-        }
-    }, [historyIndex, history]);
-
-    const handleRedo = useCallback(() => {
-        if (historyIndex < history.length - 1) {
-            const nextIndex = historyIndex + 1;
-            setHistoryIndex(nextIndex);
-            if (editorRef.current) editorRef.current.innerHTML = history[nextIndex];
-        }
-    }, [historyIndex, history]);
-
-    const handleClose = useCallback(() => {
-        const trimmedTitle = title.trim();
-        const trimmedContent = editorRef.current?.textContent?.trim() || "";
-
-        if (trimmedTitle || trimmedContent || images.length > 0) {
-            console.log("Saving note:", {
-                title: trimmedTitle,
-                content: trimmedContent,
-                images,
-                isPinned,
-            });
-        }
-
-        setIsExpanded(false);
-        setTitle("");
-        setIsPinned(false);
-        setImages([]);
-        setHistory([""]);
-        setHistoryIndex(0);
-        setIsReminderOpen(false);
-        setIsCollaboratorOpen(false);
-        setIsMoreMenuOpen(false);
-        setIsTextFormatOpen(false);
-        if (editorRef.current) editorRef.current.innerHTML = "";
-    }, [title, images, isPinned]);
-
-    const closeAllDropdowns = useCallback(() => {
-        setIsReminderOpen(false);
-        setIsCollaboratorOpen(false);
-        setIsMoreMenuOpen(false);
-        setIsTextFormatOpen(false);
-    }, []);
-
-    const handleArchive = useCallback(() => {
-        setShowArchived(true);
-        setTimeout(() => {
-            setShowArchived(false);
-            handleClose();
-        }, 2000);
-    }, [handleClose]);
-
-    const handleImageUpload = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            const files = e.target.files;
-            if (files) {
-                Array.from(files).forEach((file) => {
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert("File size must be less than 5MB");
-                        return;
-                    }
-                    if (file.type.startsWith("image/")) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            setImages((prev) => [...prev, event.target?.result as string]);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-            e.target.value = "";
-        },
-        []
-    );
-
-    const removeImage = (index: number) => {
-        setImages((prev) => prev.filter((_, i) => i !== index));
-    };
-
- 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 if (isExpanded) handleClose();
             }
         };
+
         if (isExpanded) {
             document.addEventListener("mousedown", handleClickOutside);
             return () => document.removeEventListener("mousedown", handleClickOutside);
         }
-    }, [isExpanded, handleClose]);
+    }, [isExpanded, title]);
 
     useEffect(() => {
-        if (isExpanded && titleRef.current) titleRef.current.focus();
+        if (isExpanded && titleRef.current) {
+            titleRef.current.focus();
+        }
     }, [isExpanded]);
 
     useEffect(() => {
@@ -205,7 +131,119 @@ function NoteCreate() {
             document.addEventListener("keydown", handleKeyDown);
             return () => document.removeEventListener("keydown", handleKeyDown);
         }
-    }, [isExpanded, handleUndo, handleRedo, handleClose]);
+    }, [isExpanded, historyIndex, history]);
+
+    const handleInput = useCallback(() => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        timeoutRef.current = setTimeout(() => {
+            const content = editorRef.current?.innerHTML || "";
+            if (content !== history[historyIndex]) {
+                const newHistory = history.slice(0, historyIndex + 1);
+                newHistory.push(content);
+
+                if (newHistory.length > 50) {
+                    newHistory.shift();
+                } else {
+                    setHistoryIndex(prev => prev + 1);
+                }
+                setHistory(newHistory);
+            }
+        }, 300);
+    }, [history, historyIndex]);
+
+    const handleUndo = useCallback(() => {
+        if (historyIndex > 0) {
+            const prevIndex = historyIndex - 1;
+            setHistoryIndex(prevIndex);
+            if (editorRef.current) {
+                editorRef.current.innerHTML = history[prevIndex];
+            }
+        }
+    }, [historyIndex, history]);
+
+    const handleRedo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            const nextIndex = historyIndex + 1;
+            setHistoryIndex(nextIndex);
+            if (editorRef.current) {
+                editorRef.current.innerHTML = history[nextIndex];
+            }
+        }
+    }, [historyIndex, history]);
+
+    const handleArchive = () => {
+        setShowArchived(true);
+        setTimeout(() => {
+            setShowArchived(false);
+            handleClose();
+        }, 2000);
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files) {
+            Array.from(files).forEach((file) => {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    return;
+                }
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        setImages((prev) => [...prev, event.target?.result as string]);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        e.target.value = '';
+    };
+
+    const removeImage = (index: number) => {
+        setImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleColorSelect = (color: ColorOption) => {
+        setBgColor(color.bgClass);
+        setIsColorOpen(false);
+    };
+
+    const handleClose = () => {
+        const trimmedTitle = title.trim();
+        const trimmedContent = editorRef.current?.textContent?.trim() || "";
+
+        if (trimmedTitle || trimmedContent || images.length > 0) {
+            console.log('Saving note:', { title: trimmedTitle, content: trimmedContent, images, isPinned, bgColor });
+        }
+
+        setIsExpanded(false);
+        setTitle("");
+        setIsPinned(false);
+        setBgColor("bg-white");
+        setImages([]);
+        setHistory([""]);
+        setHistoryIndex(0);
+        setIsReminderOpen(false);
+        setIsCollaboratorOpen(false);
+        setIsMoreMenuOpen(false);
+        setIsTextFormatOpen(false);
+        setIsColorOpen(false);
+        if (editorRef.current) editorRef.current.innerHTML = "";
+    };
+
+    const closeAllDropdowns = () => {
+        setIsReminderOpen(false);
+        setIsCollaboratorOpen(false);
+        setIsMoreMenuOpen(false);
+        setIsTextFormatOpen(false);
+        setIsColorOpen(false);
+    };
+
+    const getCurrentBorderClass = () => {
+        const currentColor = colors.find(c => c.bgClass === bgColor);
+        return currentColor ? currentColor.borderClass : 'border-gray-300';
+    };
 
     if (!isExpanded) {
         return (
@@ -217,9 +255,15 @@ function NoteCreate() {
                     >
                         <p className="text-gray-600 text-base">Take a note...</p>
                         <div className="flex items-center gap-4">
-                            <ToolButton icon={CheckSquare} label="New list" />
-                            <ToolButton icon={Brush} label="New note with drawing" />
-                            <ToolButton icon={ImagePlus} label="New note with image" />
+                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New list">
+                                <CheckSquare size={20} className="text-gray-600" />
+                            </button>
+                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with drawing">
+                                <Brush size={20} className="text-gray-600" />
+                            </button>
+                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with image">
+                                <ImagePlus size={20} className="text-gray-600" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -230,10 +274,10 @@ function NoteCreate() {
     return (
         <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-16">
             <div className="w-full max-w-2xl px-4">
-                <div ref={containerRef} className="relative bg-white border border-gray-300 rounded-lg shadow-lg">
+                <div ref={containerRef} className={`relative ${bgColor} border ${getCurrentBorderClass()} rounded-lg shadow-lg transition-colors`}>
                     <button
                         onClick={() => setIsPinned(!isPinned)}
-                        className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+                        className="absolute top-3 right-3 p-2 hover:bg-black hover:bg-opacity-10 rounded-full transition-colors z-10"
                         title={isPinned ? "Unpin note" : "Pin note"}
                     >
                         <Pin size={18} className={`${isPinned ? "fill-gray-700" : ""} text-gray-600`} />
@@ -246,7 +290,7 @@ function NoteCreate() {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Title"
-                            className="w-full text-base font-medium text-gray-800 placeholder-gray-500 outline-none mb-3 pr-10"
+                            className={`w-full text-base font-medium text-gray-800 placeholder-gray-500 outline-none mb-3 pr-10 ${bgColor} bg-transparent`}
                         />
 
                         <div
@@ -275,7 +319,7 @@ function NoteCreate() {
                         )}
                     </div>
 
-                    <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200">
+                    <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 border-opacity-60">
                         <div className="flex items-center relative">
                             <input
                                 ref={fileInputRef}
@@ -286,10 +330,9 @@ function NoteCreate() {
                                 className="hidden"
                             />
 
-                        
                             <div className="relative">
                                 <ToolButton
-                                    icon={Baseline}
+                                    icon={Type}
                                     onClick={() => {
                                         closeAllDropdowns();
                                         setIsTextFormatOpen(!isTextFormatOpen);
@@ -315,7 +358,6 @@ function NoteCreate() {
                                 )}
                             </div>
 
-            
                             <div className="relative">
                                 <ToolButton
                                     icon={Bell}
@@ -342,7 +384,6 @@ function NoteCreate() {
                                 )}
                             </div>
 
-                        
                             <div className="relative">
                                 <ToolButton
                                     icon={UserPlus}
@@ -373,17 +414,53 @@ function NoteCreate() {
                                             </div>
                                             <div className="flex justify-end gap-2 mt-4">
                                                 <button className="px-4 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                                                <button className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">
-                                                    Save
-                                                </button>
+                                                <button className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
                                             </div>
                                         </div>
                                     </Dropdown>
                                 )}
                             </div>
 
-                            <ToolButton icon={Palette} label="Background options" />
-                            <ToolButton icon={Image} onClick={() => fileInputRef.current?.click()} label="Add image" />
+                            <div className="relative">
+                                <ToolButton
+                                    icon={Palette}
+                                    onClick={() => {
+                                        closeAllDropdowns();
+                                        setIsColorOpen(!isColorOpen);
+                                    }}
+                                    label="Background options"
+                                />
+                                {isColorOpen && (
+                                    <Dropdown onClose={() => setIsColorOpen(false)}>
+                                        <div className="p-3 min-w-[280px]">
+                                            <h3 className="text-sm font-medium text-gray-700 mb-3">Background color</h3>
+                                            <div className="grid grid-cols-5 gap-2">
+                                                {colors.map((color) => (
+                                                    <button
+                                                        key={color.name}
+                                                        onClick={() => handleColorSelect(color)}
+                                                        className={`w-12 h-12 rounded-full ${color.bgClass} border-2 ${bgColor === color.bgClass
+                                                                ? 'border-blue-500 ring-2 ring-blue-300'
+                                                                : 'border-gray-300 hover:border-gray-400'
+                                                            } transition-all hover:scale-110 flex items-center justify-center`}
+                                                        title={color.name}
+                                                    >
+                                                        {bgColor === color.bgClass && (
+                                                            <Check size={18} className="text-gray-700" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </Dropdown>
+                                )}
+                            </div>
+
+                            <ToolButton
+                                icon={Image}
+                                onClick={() => fileInputRef.current?.click()}
+                                label="Add image"
+                            />
                             <ToolButton icon={Archive} onClick={handleArchive} label="Archive" />
 
                             <div className="relative">
@@ -426,7 +503,7 @@ function NoteCreate() {
 
                         <button
                             onClick={handleClose}
-                            className="text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-1.5 rounded transition-colors ml-2"
+                            className="text-sm font-medium text-gray-700 hover:bg-black hover:bg-opacity-10 px-4 py-1.5 rounded transition-colors ml-2"
                         >
                             Close
                         </button>
@@ -441,59 +518,65 @@ function NoteCreate() {
             </div>
         </div>
     );
-    
-    function ToolButton({ icon: Icon, onClick, disabled = false, label }: ToolButtonProps) {
-        return (
-            <button
-                onClick={onClick}
-                disabled={disabled}
-                className={`p-2 rounded-full transition-colors ${disabled ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100 cursor-pointer"
-                    }`}
-                title={label}
-            >
-                <Icon size={18} className="text-gray-600" />
-            </button>
-        );
-    }
-
-    function Dropdown({ children, onClose }: DropdownProps) {
-        const ref = useRef<HTMLDivElement>(null);
-    
-        useEffect(() => {
-            const handleClick = (e: MouseEvent) => {
-                if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-            };
-            document.addEventListener("mousedown", handleClick);
-            return () => document.removeEventListener("mousedown", handleClick);
-        }, [onClose]);
-    
-        return (
-            <div
-                ref={ref}
-                className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
-            >
-                {children}
-            </div>
-        );
-    }
-
-    function DropdownItem({ icon: Icon, children }: DropdownItemProps) {
-        return (
-            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
-                {Icon && <Icon size={16} className="text-gray-600" />}
-                {children}
-            </button>
-        );
-    }
-
-    function FormatButton({ icon: Icon, label }: FormatButtonProps) {
-        return (
-            <button className="p-2 hover:bg-gray-100 rounded transition-colors" title={label}>
-                <Icon size={18} className="text-gray-700" />
-            </button>
-
-        )
-    }
 }
 
-export default NoteCreate
+function ToolButton({ icon: Icon, onClick, disabled = false, label }: ToolButtonProps) {
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            className={`p-2 rounded-full transition-colors ${disabled
+                    ? "opacity-30 cursor-not-allowed"
+                    : "hover:bg-black hover:bg-opacity-10 cursor-pointer"
+                }`}
+            title={label}
+        >
+            <Icon size={18} className="text-gray-600" />
+        </button>
+    );
+}
+
+function Dropdown({ children, onClose }: DropdownProps) {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                onClose();
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [onClose]);
+
+    return (
+        <div
+            ref={ref}
+            className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
+        >
+            {children}
+        </div>
+    );
+}
+
+function DropdownItem({ icon: Icon, children }: DropdownItemProps) {
+    return (
+        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
+            {Icon && <Icon size={16} className="text-gray-600" />}
+            {children}
+        </button>
+    );
+}
+
+function FormatButton({ icon: Icon, label }: FormatButtonProps) {
+    return (
+        <button
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            title={label}
+        >
+            <Icon size={18} className="text-gray-700" />
+        </button>
+    );
+}
+
+export default NoteCreate;
