@@ -24,8 +24,15 @@ import {
     Underline,
     RemoveFormatting,
     Check,
+    Plus,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+
+interface ListItem {
+    id: string;
+    text: string;
+    checked: boolean;
+}
 
 interface ToolButtonProps {
     icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -77,7 +84,7 @@ function NoteCreate() {
     const titleRef = useRef<HTMLInputElement>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<number | null>(null);
 
     const colors: ColorOption[] = [
         { name: 'Default', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
@@ -91,47 +98,6 @@ function NoteCreate() {
         { name: 'Pink', bgClass: 'bg-pink-100', borderClass: 'border-pink-200', hex: '#fce7f3' },
         { name: 'Gray', bgClass: 'bg-gray-100', borderClass: 'border-gray-300', hex: '#f3f4f6' },
     ];
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-                if (isExpanded) handleClose();
-            }
-        };
-
-        if (isExpanded) {
-            document.addEventListener("mousedown", handleClickOutside);
-            return () => document.removeEventListener("mousedown", handleClickOutside);
-        }
-    }, [isExpanded, title]);
-
-    useEffect(() => {
-        if (isExpanded && titleRef.current) {
-            titleRef.current.focus();
-        }
-    }, [isExpanded]);
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
-                e.preventDefault();
-                handleUndo();
-            }
-            if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
-                e.preventDefault();
-                handleRedo();
-            }
-            if (e.key === "Escape" && isExpanded) {
-                e.preventDefault();
-                handleClose();
-            }
-        };
-
-        if (isExpanded) {
-            document.addEventListener("keydown", handleKeyDown);
-            return () => document.removeEventListener("keydown", handleKeyDown);
-        }
-    }, [isExpanded, historyIndex, history]);
 
     const handleInput = useCallback(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -255,7 +221,7 @@ function NoteCreate() {
                     >
                         <p className="text-gray-600 text-base">Take a note...</p>
                         <div className="flex items-center gap-4">
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New list">
+                            <button onClick={()=>List} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New list">
                                 <CheckSquare size={20} className="text-gray-600" />
                             </button>
                             <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with drawing">
@@ -277,7 +243,7 @@ function NoteCreate() {
                 <div ref={containerRef} className={`relative ${bgColor} border ${getCurrentBorderClass()} rounded-lg shadow-lg transition-colors`}>
                     <button
                         onClick={() => setIsPinned(!isPinned)}
-                        className="absolute top-3 right-3 p-2 hover:bg-black hover:bg-opacity-10 rounded-full transition-colors z-10"
+                        className="absolute top-3 right-3 p-2 hover:bg-gray-200 hover:bg-opacity-10 rounded-full transition-colors z-10"
                         title={isPinned ? "Unpin note" : "Pin note"}
                     >
                         <Pin size={18} className={`${isPinned ? "fill-gray-700" : ""} text-gray-600`} />
@@ -309,7 +275,7 @@ function NoteCreate() {
                                         <img src={img} alt="" className="w-full h-24 object-cover rounded" />
                                         <button
                                             onClick={() => removeImage(idx)}
-                                            className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-1 right-1 bg-gray-500 bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             <X size={14} />
                                         </button>
@@ -440,8 +406,8 @@ function NoteCreate() {
                                                         key={color.name}
                                                         onClick={() => handleColorSelect(color)}
                                                         className={`w-12 h-12 rounded-full ${color.bgClass} border-2 ${bgColor === color.bgClass
-                                                                ? 'border-blue-500 ring-2 ring-blue-300'
-                                                                : 'border-gray-300 hover:border-gray-400'
+                                                            ? 'border-blue-500 ring-2 ring-blue-300'
+                                                            : 'border-gray-300 hover:border-gray-400'
                                                             } transition-all hover:scale-110 flex items-center justify-center`}
                                                         title={color.name}
                                                     >
@@ -503,7 +469,7 @@ function NoteCreate() {
 
                         <button
                             onClick={handleClose}
-                            className="text-sm font-medium text-gray-700 hover:bg-black hover:bg-opacity-10 px-4 py-1.5 rounded transition-colors ml-2"
+                            className="text-sm font-medium text-gray-700 hover:bg-gray-100 hover:bg-opacity-10 px-4 py-1.5 rounded transition-colors ml-2"
                         >
                             Close
                         </button>
@@ -520,63 +486,135 @@ function NoteCreate() {
     );
 }
 
-function ToolButton({ icon: Icon, onClick, disabled = false, label }: ToolButtonProps) {
-    return (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            className={`p-2 rounded-full transition-colors ${disabled
-                    ? "opacity-30 cursor-not-allowed"
-                    : "hover:bg-black hover:bg-opacity-10 cursor-pointer"
-                }`}
-            title={label}
-        >
-            <Icon size={18} className="text-gray-600" />
-        </button>
-    );
-}
+    function List() {
+        const [items, setItems] = useState<ListItem[]>([
+            { id: '1', text: '', checked: false }
+        ]);
 
-function Dropdown({ children, onClose }: DropdownProps) {
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
-                onClose();
-            }
+        const addItem = () => {
+            const newItem: ListItem = {
+                id: Date.now().toString(),
+                text: '',
+                checked: false
+            };
+            setItems([...items, newItem]);
         };
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, [onClose]);
 
-    return (
-        <div
-            ref={ref}
-            className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
-        >
-            {children}
-        </div>
-    );
-}
+        const removeItem = (id: string) => {
+            setItems(items.filter(item => item.id !== id));
+        };
 
-function DropdownItem({ icon: Icon, children }: DropdownItemProps) {
-    return (
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
-            {Icon && <Icon size={16} className="text-gray-600" />}
-            {children}
-        </button>
-    );
-}
+        const toggleCheck = (id: string) => {
+            setItems(items.map(item =>
+                item.id === id ? { ...item, checked: !item.checked } : item
+            ));
+        };
 
-function FormatButton({ icon: Icon, label }: FormatButtonProps) {
-    return (
-        <button
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
-            title={label}
-        >
-            <Icon size={18} className="text-gray-700" />
-        </button>
-    );
-}
+        const updateText = (id: string, text: string) => {
+            setItems(items.map(item =>
+                item.id === id ? { ...item, text } : item
+            ));
+        };
+
+        return (
+            <div className="w-full max-w-2xl mx-auto p-4">
+                <ul className="space-y-2">
+                    {items.map((item) => (
+                        <li key={item.id} className="flex items-center gap-3 group">
+                            <input
+                                type="checkbox"
+                                checked={item.checked}
+                                onChange={() => toggleCheck(item.id)}
+                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <div
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => updateText(item.id, e.currentTarget.textContent || '')}
+                                className={`flex-1 outline-none px-2 py-1 rounded hover:bg-gray-50 focus:bg-gray-50 min-h-6 ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'
+                                    }`}
+                                data-placeholder="List item"
+                            />
+                            <button
+                                onClick={() => removeItem(item.id)}
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-opacity"
+                            >
+                                <X size={16} className="text-gray-600" />
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+                <button
+                    onClick={addItem}
+                    className="flex items-center gap-2 mt-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                >
+                    <Plus size={16} />
+                    List Item
+                </button>
+            </div>
+        );
+    }
+
+
+
+    function ToolButton({ icon: Icon, onClick, disabled = false, label }: ToolButtonProps) {
+        return (
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                className={`p-2 rounded-full transition-colors ${disabled
+                    ? "opacity-30 cursor-not-allowed"
+                    : "hover:bg-gray-200 hover:bg-opacity-10 cursor-pointer"
+                    }`}
+                title={label}
+            >
+                <Icon size={18} className="text-gray-600" />
+            </button>
+        );
+    }
+
+    function Dropdown({ children, onClose }: DropdownProps) {
+        const ref = useRef<HTMLDivElement>(null);
+
+        useEffect(() => {
+            const handleClick = (e: MouseEvent) => {
+                if (ref.current && !ref.current.contains(e.target as Node)) {
+                    onClose();
+                }
+            };
+            document.addEventListener("mousedown", handleClick);
+            return () => document.removeEventListener("mousedown", handleClick);
+        }, [onClose]);
+
+        return (
+            <div
+                ref={ref}
+                className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
+            >
+                {children}
+            </div>
+        );
+    }
+
+    function DropdownItem({ icon: Icon, children }: DropdownItemProps) {
+        return (
+            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
+                {Icon && <Icon size={16} className="text-gray-600" />}
+                {children}
+            </button>
+        );
+    }
+
+    function FormatButton({ icon: Icon, label }: FormatButtonProps) {
+        return (
+            <button
+                className="p-2 hover:bg-gray-200 rounded transition-colors"
+                title={label}
+            >
+                <Icon size={18} className="text-gray-700" />
+            </button>
+        );
+    }
+
 
 export default NoteCreate;
