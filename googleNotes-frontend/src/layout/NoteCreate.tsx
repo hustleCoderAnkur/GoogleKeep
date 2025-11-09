@@ -26,34 +26,15 @@ import {
     Check,
     Plus,
 } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
+import { Dropdown, DropdownItem } from "../components/DropDown";
+import FormatButton from "../components/fromatBtn";
+import ToolButton from "../components/ToolBtn";
 
 interface ListItem {
     id: string;
     text: string;
     checked: boolean;
-}
-
-interface ToolButtonProps {
-    icon: React.ComponentType<{ size?: number; className?: string }>;
-    onClick: () => void;
-    disabled?: boolean;
-    label: string;
-}
-
-interface DropdownProps {
-    children: React.ReactNode;
-    onClose: () => void;
-}
-
-interface DropdownItemProps {
-    icon?: React.ComponentType<{ size?: number; className?: string }>;
-    children: React.ReactNode;
-}
-
-interface FormatButtonProps {
-    icon: React.ComponentType<{ size?: number; className?: string }>;
-    label: string;
 }
 
 interface ColorOption {
@@ -68,23 +49,52 @@ function NoteCreate() {
     const [isPinned, setIsPinned] = useState(false);
     const [title, setTitle] = useState("");
     const [bgColor, setBgColor] = useState("bg-white");
-
+    const [isListMode, setIsListMode] = useState(false);
     const [isReminderOpen, setIsReminderOpen] = useState(false);
     const [isCollaboratorOpen, setIsCollaboratorOpen] = useState(false);
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
     const [isTextFormatOpen, setIsTextFormatOpen] = useState(false);
     const [isColorOpen, setIsColorOpen] = useState(false);
-
     const [history, setHistory] = useState<string[]>([""]);
     const [historyIndex, setHistoryIndex] = useState(0);
     const [showArchived, setShowArchived] = useState(false);
     const [images, setImages] = useState<string[]>([]);
-
     const fileInputRef = useRef<HTMLInputElement>(null);
     const titleRef = useRef<HTMLInputElement>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const timeoutRef = useRef<number | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const [items, setItems] = useState<ListItem[]>([
+        { id: '1', text: '', checked: false }
+    ]);
+
+    const addItem = () => {
+        const newItem: ListItem = {
+            id: Date.now().toString(),
+            text: '',
+            checked: false
+        };
+        setItems([...items, newItem]);
+    };
+
+    const removeItem = (id: string) => {
+        if (items.length > 1) {
+            setItems(items.filter(item => item.id !== id));
+        }
+    };
+
+    const toggleCheck = (id: string) => {
+        setItems(items.map(item =>
+            item.id === id ? { ...item, checked: !item.checked } : item
+        ));
+    };
+
+    const updateText = (id: string, text: string) => {
+        setItems(items.map(item =>
+            item.id === id ? { ...item, text } : item
+        ));
+    };
 
     const colors: ColorOption[] = [
         { name: 'Default', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
@@ -179,10 +189,19 @@ function NoteCreate() {
         const trimmedTitle = title.trim();
         const trimmedContent = editorRef.current?.textContent?.trim() || "";
 
-        if (trimmedTitle || trimmedContent || images.length > 0) {
-            console.log('Saving note:', { title: trimmedTitle, content: trimmedContent, images, isPinned, bgColor });
+        if (trimmedTitle || trimmedContent || images.length > 0 || items.some(item => item.text.trim())) {
+            console.log('Saving note:', {
+                title: trimmedTitle,
+                content: trimmedContent,
+                images,
+                isPinned,
+                bgColor,
+                isListMode,
+                items: isListMode ? items : undefined
+            });
         }
 
+        
         setIsExpanded(false);
         setTitle("");
         setIsPinned(false);
@@ -195,6 +214,8 @@ function NoteCreate() {
         setIsMoreMenuOpen(false);
         setIsTextFormatOpen(false);
         setIsColorOpen(false);
+        setIsListMode(false);
+        setItems([{ id: '1', text: '', checked: false }]);
         if (editorRef.current) editorRef.current.innerHTML = "";
     };
 
@@ -211,6 +232,18 @@ function NoteCreate() {
         return currentColor ? currentColor.borderClass : 'border-gray-300';
     };
 
+    const handleListModeToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsListMode(true);
+        setIsExpanded(true);
+    };
+
+    const handleTextModeToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsListMode(false);
+        setIsExpanded(true);
+    };
+
     if (!isExpanded) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-16">
@@ -221,13 +254,25 @@ function NoteCreate() {
                     >
                         <p className="text-gray-600 text-base">Take a note...</p>
                         <div className="flex items-center gap-4">
-                            <button onClick={()=>List} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New list">
+                            <button
+                                onClick={handleListModeToggle}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="New list"
+                            >
                                 <CheckSquare size={20} className="text-gray-600" />
                             </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with drawing">
+                            <button
+                                onClick={handleTextModeToggle}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="New note with drawing"
+                            >
                                 <Brush size={20} className="text-gray-600" />
                             </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="New note with image">
+                            <button
+                                onClick={handleTextModeToggle}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="New note with image"
+                            >
                                 <ImagePlus size={20} className="text-gray-600" />
                             </button>
                         </div>
@@ -259,14 +304,57 @@ function NoteCreate() {
                             className={`w-full text-base font-medium text-gray-800 placeholder-gray-500 outline-none mb-3 pr-10 ${bgColor} bg-transparent`}
                         />
 
-                        <div
-                            ref={editorRef}
-                            contentEditable
-                            suppressContentEditableWarning
-                            onInput={handleInput}
-                            className="w-full min-h-[60px] text-sm text-gray-800 outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-500"
-                            data-placeholder="Take a note..."
-                        />
+                        {isListMode ? (
+                            <div className="w-full">
+                                <ul className="space-y-2">
+                                    {items.map((item) => (
+                                        <li key={item.id} className="flex items-center gap-3 group">
+                                            <input
+                                                type="checkbox"
+                                                checked={item.checked}
+                                                onChange={() => toggleCheck(item.id)}
+                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={item.text}
+                                                onChange={(e) => updateText(item.id, e.target.value)}
+                                                placeholder="List item"
+                                                className={`flex-1 outline-none px-2 py-1 rounded hover:bg-gray-50 focus:bg-gray-50 bg-transparent ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'
+                                                    }`}
+                                            />
+                                            <button
+                                                onClick={() => removeItem(item.id)}
+                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-opacity"
+                                                disabled={items.length === 1}
+                                            >
+                                                <X size={16} className="text-gray-600" />
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    onClick={addItem}
+                                    className="flex items-center gap-2 mt-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                    <Plus size={16} />
+                                    List Item
+                                </button>
+                            </div>
+                        ) : (
+                            <div
+                                ref={editorRef}
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={handleInput}
+                                className="w-full min-h-[60px] text-sm text-gray-800 outline-none"
+                                style={{
+                                    minHeight: '60px',
+                                }}
+                                data-placeholder="Take a note..."
+                            >
+                            </div>
+                        )}
 
                         {images.length > 0 && (
                             <div className="grid grid-cols-3 gap-2 mt-3">
@@ -485,136 +573,5 @@ function NoteCreate() {
         </div>
     );
 }
-
-    function List() {
-        const [items, setItems] = useState<ListItem[]>([
-            { id: '1', text: '', checked: false }
-        ]);
-
-        const addItem = () => {
-            const newItem: ListItem = {
-                id: Date.now().toString(),
-                text: '',
-                checked: false
-            };
-            setItems([...items, newItem]);
-        };
-
-        const removeItem = (id: string) => {
-            setItems(items.filter(item => item.id !== id));
-        };
-
-        const toggleCheck = (id: string) => {
-            setItems(items.map(item =>
-                item.id === id ? { ...item, checked: !item.checked } : item
-            ));
-        };
-
-        const updateText = (id: string, text: string) => {
-            setItems(items.map(item =>
-                item.id === id ? { ...item, text } : item
-            ));
-        };
-
-        return (
-            <div className="w-full max-w-2xl mx-auto p-4">
-                <ul className="space-y-2">
-                    {items.map((item) => (
-                        <li key={item.id} className="flex items-center gap-3 group">
-                            <input
-                                type="checkbox"
-                                checked={item.checked}
-                                onChange={() => toggleCheck(item.id)}
-                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <div
-                                contentEditable
-                                suppressContentEditableWarning
-                                onBlur={(e) => updateText(item.id, e.currentTarget.textContent || '')}
-                                className={`flex-1 outline-none px-2 py-1 rounded hover:bg-gray-50 focus:bg-gray-50 min-h-6 ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'
-                                    }`}
-                                data-placeholder="List item"
-                            />
-                            <button
-                                onClick={() => removeItem(item.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-opacity"
-                            >
-                                <X size={16} className="text-gray-600" />
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-                <button
-                    onClick={addItem}
-                    className="flex items-center gap-2 mt-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                >
-                    <Plus size={16} />
-                    List Item
-                </button>
-            </div>
-        );
-    }
-
-
-
-    function ToolButton({ icon: Icon, onClick, disabled = false, label }: ToolButtonProps) {
-        return (
-            <button
-                onClick={onClick}
-                disabled={disabled}
-                className={`p-2 rounded-full transition-colors ${disabled
-                    ? "opacity-30 cursor-not-allowed"
-                    : "hover:bg-gray-200 hover:bg-opacity-10 cursor-pointer"
-                    }`}
-                title={label}
-            >
-                <Icon size={18} className="text-gray-600" />
-            </button>
-        );
-    }
-
-    function Dropdown({ children, onClose }: DropdownProps) {
-        const ref = useRef<HTMLDivElement>(null);
-
-        useEffect(() => {
-            const handleClick = (e: MouseEvent) => {
-                if (ref.current && !ref.current.contains(e.target as Node)) {
-                    onClose();
-                }
-            };
-            document.addEventListener("mousedown", handleClick);
-            return () => document.removeEventListener("mousedown", handleClick);
-        }, [onClose]);
-
-        return (
-            <div
-                ref={ref}
-                className="absolute top-10 left-0 bg-white border border-gray-300 rounded-lg shadow-xl z-50"
-            >
-                {children}
-            </div>
-        );
-    }
-
-    function DropdownItem({ icon: Icon, children }: DropdownItemProps) {
-        return (
-            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left">
-                {Icon && <Icon size={16} className="text-gray-600" />}
-                {children}
-            </button>
-        );
-    }
-
-    function FormatButton({ icon: Icon, label }: FormatButtonProps) {
-        return (
-            <button
-                className="p-2 hover:bg-gray-200 rounded transition-colors"
-                title={label}
-            >
-                <Icon size={18} className="text-gray-700" />
-            </button>
-        );
-    }
-
 
 export default NoteCreate;

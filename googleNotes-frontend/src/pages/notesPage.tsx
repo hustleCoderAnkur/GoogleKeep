@@ -1,4 +1,4 @@
-import  NoteCreate from "../components/NoteCreate";
+import  NoteCreate from "../layout/NoteCreate";
 
 function NotePage() {
     return (
