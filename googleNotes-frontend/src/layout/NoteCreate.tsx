@@ -201,7 +201,6 @@ function NoteCreate() {
             });
         }
 
-        
         setIsExpanded(false);
         setTitle("");
         setIsPinned(false);
@@ -355,7 +354,6 @@ function NoteCreate() {
                             >
                             </div>
                         )}
-
                         {images.length > 0 && (
                             <div className="grid grid-cols-3 gap-2 mt-3">
                                 {images.map((img, idx) => (
