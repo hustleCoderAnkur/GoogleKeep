@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { Dropdown, DropdownItem } from "./DropDown";
-import FormatButton from "./fromatBtn";
-import ToolButton from "./ToolBtn";
+import { Dropdown, DropdownItem } from "./DropDown.tsx";
+import FormatButton from "./fromatBtn.tsx";
+import ToolButton from "./ToolBtn.tsx";
 import {
     Bell,
     Clock,
@@ -33,7 +33,6 @@ interface ColorOption {
     hex: string;
 }
 
-
 interface NoteDownProps {
     onClose: () => void;
     bgColor: string;
@@ -50,14 +49,11 @@ interface NoteDownProps {
     handleRedo: () => void;
 }
 
-
 function NoteDown({
     onClose,
     bgColor,
     setBgColor,
-    
     fileInputRef,
-    
     history,
     historyIndex,
     handleUndo,
@@ -279,7 +275,7 @@ function NoteDown({
 
                 <button
                     onClick={onClose}
-                    className="text-sm font-medium text-gray-700 hover:bg-gray-100 hover:bg-opacity-10 px-4 py-1.5 rounded transition-colors ml-2"
+                    className="text-sm font-medium text-gray-700 hover:bg-gray-100 hover:bg-opacity-10 px-4 py-1.5 rounded transition-colors ml-52"
                 >
                     Close
                 </button>
@@ -294,4 +290,4 @@ function NoteDown({
     );
 }
 
-export default NoteDown;
+export default NoteDown

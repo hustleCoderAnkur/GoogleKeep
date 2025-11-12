@@ -9,7 +9,6 @@ import {
 import { useState, useRef, useCallback } from "react";
 import NoteDown from "../components/NoteDown";
 
-
 interface ListItem {
     id: string;
     text: string;
@@ -22,7 +21,6 @@ interface ColorOption {
     borderClass: string;
     hex: string;
 }
-
 
 function NoteCreate() {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -102,6 +100,26 @@ function NoteCreate() {
         }, 300);
     }, [history, historyIndex]);
 
+    const handleUndo = useCallback(() => {
+        if (historyIndex > 0) {
+            const prevIndex = historyIndex - 1;
+            setHistoryIndex(prevIndex);
+            if (editorRef.current) {
+                editorRef.current.innerHTML = history[prevIndex];
+            }
+        }
+    }, [historyIndex, history]);
+
+    const handleRedo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            const nextIndex = historyIndex + 1;
+            setHistoryIndex(nextIndex);
+            if (editorRef.current) {
+                editorRef.current.innerHTML = history[nextIndex];
+            }
+        }
+    }, [historyIndex, history]);
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files) {
@@ -142,7 +160,6 @@ function NoteCreate() {
             });
         }
 
-        // Reset everything
         setIsExpanded(false);
         setTitle("");
         setIsPinned(false);
@@ -174,61 +191,39 @@ function NoteCreate() {
 
     if (!isExpanded) {
         return (
-            <>
-                <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-16">
-                    <div className="w-full max-w-2xl px-4">
-                        <div
-                            onClick={() => setIsExpanded(true)}
-                            className="flex items-center justify-between cursor-text bg-white border border-gray-300 rounded-lg shadow-sm px-4 py-3 hover:shadow-md transition-shadow"
-                        >
-                            <p className="text-gray-600 text-base">Take a note...</p>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleListModeToggle}
-                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                                    title="New list"
-                                >
-                                    <CheckSquare size={20} className="text-gray-600" />
-                                </button>
-                                <button
-                                    onClick={handleTextModeToggle}
-                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                                    title="New note with drawing"
-                                >
-                                    <Brush size={20} className="text-gray-600" />
-                                </button>
-                                <button
-                                    onClick={handleTextModeToggle}
-                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                                    title="New note with image"
-                                >
-                                    <ImagePlus size={20} className="text-gray-600" />
-                                </button>
-                            </div>
+            <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-16">
+                <div className="w-full max-w-2xl px-4">
+                    <div
+                        onClick={() => setIsExpanded(true)}
+                        className="flex items-center justify-between cursor-text bg-white border border-gray-300 rounded-lg shadow-sm px-4 py-3 hover:shadow-md transition-shadow"
+                    >
+                        <p className="text-gray-600 text-base">Take a note...</p>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleListModeToggle}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="New list"
+                            >
+                                <CheckSquare size={20} className="text-gray-600" />
+                            </button>
+                            <button
+                                onClick={handleTextModeToggle}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="New note with drawing"
+                            >
+                                <Brush size={20} className="text-gray-600" />
+                            </button>
+                            <button
+                                onClick={handleTextModeToggle}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="New note with image"
+                            >
+                                <ImagePlus size={20} className="text-gray-600" />
+                            </button>
                         </div>
                     </div>
                 </div>
-
-
-                <NoteDown
-                    onClose={handleClose}
-                    bgColor={bgColor}
-                    setBgColor={setBgColor}
-                    isPinned={isPinned}
-                    setIsPinned={setIsPinned}
-                    fileInputRef={fileInputRef}
-                    editorRef={editorRef}
-                    history={history}
-                    setHistory={setHistory}
-                    historyIndex={historyIndex}
-                    setHistoryIndex={setHistoryIndex}
-                    handleUndo={handleUndo}
-                    handleRedo={handleRedo}
-                />
-
-
-
-            </>
+            </div>
         );
     }
 
@@ -324,48 +319,34 @@ function NoteCreate() {
                         </div>
 
                         <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 border-opacity-60">
-                            <div className="flex items-center relative">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleImageUpload}
-                                    className="hidden"
-                                />
-                            </div>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
 
-
-                            <button
-                                onClick={handleClose}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                            >
-                                Close
-                            </button>
+                            <NoteDown
+                                onClose={handleClose}
+                                bgColor={bgColor}
+                                setBgColor={setBgColor}
+                                isPinned={isPinned}
+                                setIsPinned={setIsPinned}
+                                fileInputRef={fileInputRef}
+                                editorRef={editorRef}
+                                history={history}
+                                setHistory={setHistory}
+                                historyIndex={historyIndex}
+                                setHistoryIndex={setHistoryIndex}
+                                handleUndo={handleUndo}
+                                handleRedo={handleRedo}
+                            />
                         </div>
                     </div>
                 </div>
             </div>
-
-
-            <NoteDown
-                onClose={handleClose}
-                bgColor={bgColor}
-                setBgColor={setBgColor}
-                isPinned={isPinned}
-                setIsPinned={setIsPinned}
-                fileInputRef={fileInputRef}
-                editorRef={editorRef}
-                history={history}
-                setHistory={setHistory}
-                historyIndex={historyIndex}
-                setHistoryIndex={setHistoryIndex}
-                handleUndo={handleUndo}
-                handleRedo={handleRedo}
-            />
-
-
-
         </>
     );
 }

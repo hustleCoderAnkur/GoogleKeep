@@ -1,7 +1,7 @@
 import { Menu, RotateCw, Search, Grid2X2, CirclePlusIcon, Rows2, Settings, Grip, CircleUser } from "lucide-react"
 import { useState } from "react"
-import Button from "../components/Button"
-import Input from "../components/Input"
+import Button from "../components/Button.tsx"
+import Input from "../components/Input.tsx"
 
 interface MenuBarProps{
     isSideOpen: boolean,
