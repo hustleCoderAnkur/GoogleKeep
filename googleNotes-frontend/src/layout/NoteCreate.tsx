@@ -4,10 +4,10 @@ import {
     X,
     CheckSquare,
     Brush,
-    Plus,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 import NoteDown from "../components/NoteDown";
+import NoteList from "../components/NoteList";
 
 interface ListItem {
     id: string;
@@ -40,33 +40,6 @@ function NoteCreate() {
     const [items, setItems] = useState<ListItem[]>([
         { id: '1', text: '', checked: false }
     ]);
-
-    const addItem = () => {
-        const newItem: ListItem = {
-            id: Date.now().toString(),
-            text: '',
-            checked: false
-        };
-        setItems([...items, newItem]);
-    };
-
-    const removeItem = (id: string) => {
-        if (items.length > 1) {
-            setItems(items.filter(item => item.id !== id));
-        }
-    };
-
-    const toggleCheck = (id: string) => {
-        setItems(items.map(item =>
-            item.id === id ? { ...item, checked: !item.checked } : item
-        ));
-    };
-
-    const updateText = (id: string, text: string) => {
-        setItems(items.map(item =>
-            item.id === id ? { ...item, text } : item
-        ));
-    };
 
     const colors: ColorOption[] = [
         { name: 'Default', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
@@ -228,126 +201,89 @@ function NoteCreate() {
     }
 
     return (
-        <>
-            <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-16">
-                <div className="w-full max-w-2xl px-4">
-                    <div ref={containerRef} className={`relative ${bgColor} border ${getCurrentBorderClass()} rounded-lg shadow-lg transition-colors`}>
-                        <button
-                            onClick={() => setIsPinned(!isPinned)}
-                            className="absolute top-3 right-3 p-2 hover:bg-gray-200 hover:bg-opacity-10 rounded-full transition-colors z-10"
-                            title={isPinned ? "Unpin note" : "Pin note"}
-                        >
-                            <Pin size={18} className={`${isPinned ? "fill-gray-700" : ""} text-gray-600`} />
-                        </button>
+        <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-16">
+            <div className="w-full max-w-2xl px-4">
+                <div ref={containerRef} className={`relative ${bgColor} border ${getCurrentBorderClass()} rounded-lg shadow-lg transition-colors`}>
+                    <button
+                        onClick={() => setIsPinned(!isPinned)}
+                        className="absolute top-3 right-3 p-2 hover:bg-gray-200 hover:bg-opacity-10 rounded-full transition-colors z-10"
+                        title={isPinned ? "Unpin note" : "Pin note"}
+                    >
+                        <Pin size={18} className={`${isPinned ? "fill-gray-700" : ""} text-gray-600`} />
+                    </button>
 
-                        <div className="p-4 pb-3">
-                            <input
-                                ref={titleRef}
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Title"
-                                className={`w-full text-base font-medium text-gray-800 placeholder-gray-500 outline-none mb-3 pr-10 ${bgColor} bg-transparent`}
-                            />
+                    <div className="p-4 pb-3">
+                        <input
+                            ref={titleRef}
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Title"
+                            className={`w-full text-base font-medium text-gray-800 placeholder-gray-500 outline-none mb-3 pr-10 ${bgColor} bg-transparent`}
+                        />
+                        
+                        {isListMode ? (
+                            <NoteList/>
+                        ) : (
+                            <div
+                                ref={editorRef}
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={handleInput}
+                                className="w-full min-h-[60px] text-sm text-gray-800 outline-none"
+                                style={{
+                                    minHeight: '60px',
+                                }}
+                                data-placeholder="Take a note..."
+                            ></div>
+                        )}
 
-                            {isListMode ? (
-                                <div className="w-full">
-                                    <ul className="space-y-2">
-                                        {items.map((item) => (
-                                            <li key={item.id} className="flex items-center gap-3 group">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={item.checked}
-                                                    onChange={() => toggleCheck(item.id)}
-                                                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    value={item.text}
-                                                    onChange={(e) => updateText(item.id, e.target.value)}
-                                                    placeholder="List item"
-                                                    className={`flex-1 outline-none px-2 py-1 rounded hover:bg-gray-50 focus:bg-gray-50 bg-transparent ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'
-                                                        }`}
-                                                />
-                                                <button
-                                                    onClick={() => removeItem(item.id)}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-opacity"
-                                                    disabled={items.length === 1}
-                                                >
-                                                    <X size={16} className="text-gray-600" />
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <button
-                                        onClick={addItem}
-                                        className="flex items-center gap-2 mt-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                                    >
-                                        <Plus size={16} />
-                                        List Item
-                                    </button>
-                                </div>
-                            ) : (
-                                <div
-                                    ref={editorRef}
-                                    contentEditable
-                                    suppressContentEditableWarning
-                                    onInput={handleInput}
-                                    className="w-full min-h-[60px] text-sm text-gray-800 outline-none"
-                                    style={{
-                                        minHeight: '60px',
-                                    }}
-                                    data-placeholder="Take a note..."
-                                >
-                                </div>
-                            )}
-                            {images.length > 0 && (
-                                <div className="grid grid-cols-3 gap-2 mt-3">
-                                    {images.map((img, idx) => (
-                                        <div key={idx} className="relative group">
-                                            <img src={img} alt="" className="w-full h-24 object-cover rounded" />
-                                            <button
-                                                onClick={() => removeImage(idx)}
-                                                className="absolute top-1 right-1 bg-gray-500 bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        {images.length > 0 && (
+                            <div className="grid grid-cols-3 gap-2 mt-3">
+                                {images.map((img, idx) => (
+                                    <div key={idx} className="relative group">
+                                        <img src={img} alt="" className="w-full h-24 object-cover rounded" />
+                                        <button
+                                            onClick={() => removeImage(idx)}
+                                            className="absolute top-1 right-1 bg-gray-500 bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                        <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 border-opacity-60">
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={handleImageUpload}
-                                className="hidden"
-                            />
+                    <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 border-opacity-60">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageUpload}
+                            className="hidden"
+                        />
 
-                            <NoteDown
-                                onClose={handleClose}
-                                bgColor={bgColor}
-                                setBgColor={setBgColor}
-                                isPinned={isPinned}
-                                setIsPinned={setIsPinned}
-                                fileInputRef={fileInputRef}
-                                editorRef={editorRef}
-                                history={history}
-                                setHistory={setHistory}
-                                historyIndex={historyIndex}
-                                setHistoryIndex={setHistoryIndex}
-                                handleUndo={handleUndo}
-                                handleRedo={handleRedo}
-                            />
-                        </div>
+                        <NoteDown
+                            onClose={handleClose}
+                            bgColor={bgColor}
+                            setBgColor={setBgColor}
+                            isPinned={isPinned}
+                            setIsPinned={setIsPinned}
+                            fileInputRef={fileInputRef}
+                            editorRef={editorRef}
+                            history={history}
+                            setHistory={setHistory}
+                            historyIndex={historyIndex}
+                            setHistoryIndex={setHistoryIndex}
+                            handleUndo={handleUndo}
+                            handleRedo={handleRedo}
+                        />
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 
