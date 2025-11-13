@@ -67,16 +67,14 @@ function NoteDown({
     const [showArchived, setShowArchived] = useState(false);
 
     const colors: ColorOption[] = [
-        { name: 'Default', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
-        { name: 'Red', bgClass: 'bg-red-100', borderClass: 'border-red-200', hex: '#fee2e2' },
-        { name: 'Orange', bgClass: 'bg-orange-100', borderClass: 'border-orange-200', hex: '#ffedd5' },
-        { name: 'Yellow', bgClass: 'bg-yellow-100', borderClass: 'border-yellow-200', hex: '#fef9c3' },
-        { name: 'Green', bgClass: 'bg-green-100', borderClass: 'border-green-200', hex: '#dcfce7' },
-        { name: 'Teal', bgClass: 'bg-teal-100', borderClass: 'border-teal-200', hex: '#ccfbf1' },
-        { name: 'Blue', bgClass: 'bg-blue-100', borderClass: 'border-blue-200', hex: '#dbeafe' },
-        { name: 'Purple', bgClass: 'bg-purple-100', borderClass: 'border-purple-200', hex: '#f3e8ff' },
-        { name: 'Pink', bgClass: 'bg-pink-100', borderClass: 'border-pink-200', hex: '#fce7f3' },
-        { name: 'Gray', bgClass: 'bg-gray-100', borderClass: 'border-gray-300', hex: '#f3f4f6' },
+        { name: 'Default', bgClass: 'bg-black', borderClass: 'border-gray-300', hex: '#ffffff' },
+        { name: 'Red', bgClass: 'bg-red-500', borderClass: 'border-red-600', hex: '#ff5252' },
+        { name: 'Orange', bgClass: 'bg-orange-500', borderClass: 'border-orange-600', hex: '#ffbc00' },
+        { name: 'Yellow', bgClass: 'bg-yellow-500', borderClass: 'border-yellow-600', hex: '#fef9c3' },
+        { name: 'Green', bgClass: 'bg-green-500', borderClass: 'border-green-600', hex: '#00c853' },
+        { name: 'Blue', bgClass: 'bg-blue-500', borderClass: 'border-blue-600', hex: '#00b0ff' },
+        { name: 'Purple', bgClass: 'bg-purple-500', borderClass: 'border-purple-600', hex: '#d500f9' },
+        { name: 'Gray', bgClass: 'bg-gray-500', borderClass: 'border-gray-600', hex: '#8d6e63' },
     ];
 
     const closeAllDropdowns = () => {

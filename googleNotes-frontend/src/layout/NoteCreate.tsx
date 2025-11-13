@@ -8,6 +8,7 @@ import {
 import { useState, useRef, useCallback } from "react";
 import NoteDown from "../components/NoteDown";
 import NoteList from "../components/NoteList";
+import DrawingPage from "../pages/DrawingPage";
 
 interface ListItem {
     id: string;
@@ -28,6 +29,7 @@ function NoteCreate() {
     const [title, setTitle] = useState("");
     const [bgColor, setBgColor] = useState("bg-white");
     const [isListMode, setIsListMode] = useState(false);
+    const [isDrawing, setIsDrawing] = useState(false);
     const [history, setHistory] = useState<string[]>([""]);
     const [historyIndex, setHistoryIndex] = useState(0);
     const [images, setImages] = useState<string[]>([]);
@@ -42,17 +44,16 @@ function NoteCreate() {
     ]);
 
     const colors: ColorOption[] = [
-        { name: 'Default', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
-        { name: 'Red', bgClass: 'bg-red-100', borderClass: 'border-red-200', hex: '#fee2e2' },
-        { name: 'Orange', bgClass: 'bg-orange-100', borderClass: 'border-orange-200', hex: '#ffedd5' },
-        { name: 'Yellow', bgClass: 'bg-yellow-100', borderClass: 'border-yellow-200', hex: '#fef9c3' },
-        { name: 'Green', bgClass: 'bg-green-100', borderClass: 'border-green-200', hex: '#dcfce7' },
-        { name: 'Teal', bgClass: 'bg-teal-100', borderClass: 'border-teal-200', hex: '#ccfbf1' },
-        { name: 'Blue', bgClass: 'bg-blue-100', borderClass: 'border-blue-200', hex: '#dbeafe' },
-        { name: 'Purple', bgClass: 'bg-purple-100', borderClass: 'border-purple-200', hex: '#f3e8ff' },
-        { name: 'Pink', bgClass: 'bg-pink-100', borderClass: 'border-pink-200', hex: '#fce7f3' },
-        { name: 'Gray', bgClass: 'bg-gray-100', borderClass: 'border-gray-300', hex: '#f3f4f6' },
+        { name: 'Default', bgClass: 'bg-black', borderClass: 'border-gray-300', hex: '#ffffff' },
+        { name: 'Red', bgClass: 'bg-red-500', borderClass: 'border-red-600', hex: '#ff5252' },
+        { name: 'Orange', bgClass: 'bg-orange-500', borderClass: 'border-orange-600', hex: '#ffbc00' },
+        { name: 'Yellow', bgClass: 'bg-yellow-500', borderClass: 'border-yellow-600', hex: '#fef9c3' },
+        { name: 'Green', bgClass: 'bg-green-500', borderClass: 'border-green-600', hex: '#00c853' },
+        { name: 'Blue', bgClass: 'bg-blue-500', borderClass: 'border-blue-600', hex: '#00b0ff' },
+        { name: 'Purple', bgClass: 'bg-purple-500', borderClass: 'border-purple-600', hex: '#d500f9' },
+        { name: 'Gray', bgClass: 'bg-gray-500', borderClass: 'border-gray-600', hex: '#8d6e63' },
     ];
+
 
     const handleInput = useCallback(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -161,6 +162,12 @@ function NoteCreate() {
         setIsListMode(false);
         setIsExpanded(true);
     };
+    const handleDrawingToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsDrawing(true);
+        setIsListMode(false);
+        setIsExpanded(true);
+    }
 
     if (!isExpanded) {
         return (
@@ -180,12 +187,13 @@ function NoteCreate() {
                                 <CheckSquare size={20} className="text-gray-600" />
                             </button>
                             <button
-                                onClick={handleTextModeToggle}
+                                onClick={handleDrawingToggle}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                                 title="New note with drawing"
                             >
                                 <Brush size={20} className="text-gray-600" />
                             </button>
+                            
                             <button
                                 onClick={handleTextModeToggle}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -198,6 +206,10 @@ function NoteCreate() {
                 </div>
             </div>
         );
+    }
+
+    if (isDrawing) {
+        return <DrawingPage />;
     }
 
     return (
