@@ -59,8 +59,6 @@ function DrawingPage() {
         { name: 'Gray', bgClass: 'bg-gray-500', borderClass: 'border-gray-600', hex: '#8d6e63' },
     ];
 
-    
-
     const ColorDropdown = ({
         isOpen,
         onClose,
