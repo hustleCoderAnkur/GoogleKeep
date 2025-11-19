@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import Button from "../components/Button.tsx";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dropdown, DropdownItem } from "../components/DropDown.tsx";
 import ToolButton from "../components/ToolBtn.tsx";
 
@@ -37,6 +37,7 @@ interface ColorDropdownProps {
 }
 
 function DrawingPage() {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [isEraserDropDown, setIsEraserDropDown] = useState(false);
     const [isGridDropDown, setIsGridDropDown] = useState(false);
 
@@ -47,6 +48,9 @@ function DrawingPage() {
     const [penColor, setPenColor] = useState("bg-black");
     const [markerColor, setMarkerColor] = useState("bg-black");
     const [highlighterColor, setHighlighterColor] = useState("bg-yellow-500");
+    const [screen, setScreen] = useState(false);
+    const [more, setMore] = useState(false);
+
 
     const colors: ColorOption[] = [
         { name: 'Black', bgClass: 'bg-black', borderClass: 'border-gray-300', hex: '#000000' },
@@ -59,6 +63,18 @@ function DrawingPage() {
         { name: 'Gray', bgClass: 'bg-gray-500', borderClass: 'border-gray-600', hex: '#8d6e63' },
     ];
 
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+            canvas.width = window.innerWidth - 40;
+            canvas.height = window.innerHeight - 200;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+    },[])
+    
     const ColorDropdown = ({
         isOpen,
         onClose,
@@ -76,8 +92,8 @@ function DrawingPage() {
                                 key={color.name}
                                 onClick={() => onColorSelect(color)}
                                 className={`w-12 h-12 rounded-full ${color.bgClass} border-2 ${selectedColor === color.bgClass
-                                        ? "border-blue-500 ring-2 ring-blue-300"
-                                        : "border-gray-300 hover:border-gray-400"
+                                    ? "border-blue-500 ring-2 ring-blue-300"
+                                    : "border-gray-300 hover:border-gray-400"
                                     } transition-all hover:scale-110 flex items-center justify-center`}
                                 title={color.name}
                             >
@@ -92,7 +108,7 @@ function DrawingPage() {
         ) : null;
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+        <div className="flex items-center justify-center bg-white p-4">
             <div className="flex flex-row items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg shadow-md px-4 py-2">
 
                 <Button title="Select Tool">
@@ -105,14 +121,16 @@ function DrawingPage() {
                     </Button>
                     <button
                         onClick={() => setIsEraserDropDown(!isEraserDropDown)}
-                        className="p-2 hover:bg-gray-100 rounded-full transition"
+                        className=" hover:bg-gray-100 rounded-full transition"
                     >
                         <ChevronDown className="w-5 h-5 text-gray-700" />
                     </button>
 
                     {isEraserDropDown && (
                         <Dropdown onClose={() => setIsEraserDropDown(false)}>
-                            <DropdownItem>Clear Page</DropdownItem>
+                            <div className="w-25 h-10" >
+                                <DropdownItem>Clear Page</DropdownItem>
+                            </div>
                         </Dropdown>
                     )}
                 </div>
@@ -168,7 +186,7 @@ function DrawingPage() {
                     </Button>
                     <button
                         onClick={() => setIsGridDropDown(!isGridDropDown)}
-                        className="p-2 hover:bg-gray-100 rounded-full transition"
+                        className=" hover:bg-gray-100 rounded-full transition"
                     >
                         <ChevronDown className="w-5 h-5 text-gray-700" />
                     </button>
@@ -200,20 +218,50 @@ function DrawingPage() {
 
                 <div className="mx-2 border-l border-gray-300 h-6" />
 
-                <Button title="Maximize">
-                    <Maximize className="w-5 h-5 text-gray-700" />
-                </Button>
+                <div onClick={() => setScreen(!screen)}>
+                    {screen ? (
+                        <Button title="Maximize">
+                            <Maximize className="w-5 h-5 text-gray-700" />
+                        </Button>
+                    ) : (
+                        <Button title="Minimize">
+                            <Minimize className="w-5 h-5 text-gray-700" />
+                        </Button>
+                    )
+                    }
+                </div>
 
-                <Button title="Minimize">
-                    <Minimize className="w-5 h-5 text-gray-700" />
-                </Button>
+                <div className="relative">
+                    <Button
+                        onClick={() => setMore(!more)}
+                        title="More"
+                        className="p-2 rounded-xl hover:bg-gray-100 transition"
+                    >
+                        <MoreVertical className="w-5 h-5 text-gray-700" />
+                    </Button>
 
-                <Button title="More">
-                    <MoreVertical className="w-5 h-5 text-gray-700" />
-                </Button>
+                    {more && (
+                        <div className="absolute right-0  w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-20 animate-fade">
+                            <Dropdown onClose={() => setMore(false)}>
+                                <DropdownItem >
+                                    New Drawing
+                                </DropdownItem>
+
+                                <DropdownItem >
+                                    Export as Image
+                                </DropdownItem>
+
+                                <DropdownItem >
+                                    Delete Current Drawing
+                                </DropdownItem>
+                            </Dropdown>
+                        </div>
+                    )}
+                </div>
+
             </div>
         </div>
     );
 }
 
-export default DrawingPage;
+export default DrawingPage
