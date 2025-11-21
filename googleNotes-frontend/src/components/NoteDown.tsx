@@ -24,6 +24,7 @@ import {
     Underline,
     RemoveFormatting,
     Check,
+
 } from "lucide-react";
 
 interface ColorOption {
@@ -49,6 +50,7 @@ interface NoteDownProps {
     handleRedo: () => void;
 }
 
+
 function NoteDown({
     onClose,
     bgColor,
@@ -67,7 +69,7 @@ function NoteDown({
     const [showArchived, setShowArchived] = useState(false);
 
     const colors: ColorOption[] = [
-        { name: 'Default', bgClass: 'bg-black', borderClass: 'border-gray-300', hex: '#ffffff' },
+        { name: 'Default', bgClass: 'bg-black', borderClass: 'border-gray-300', hex: '#000000' },
         { name: 'Red', bgClass: 'bg-red-500', borderClass: 'border-red-600', hex: '#ff5252' },
         { name: 'Orange', bgClass: 'bg-orange-500', borderClass: 'border-orange-600', hex: '#ffbc00' },
         { name: 'Yellow', bgClass: 'bg-yellow-500', borderClass: 'border-yellow-600', hex: '#fef9c3' },
@@ -75,6 +77,7 @@ function NoteDown({
         { name: 'Blue', bgClass: 'bg-blue-500', borderClass: 'border-blue-600', hex: '#00b0ff' },
         { name: 'Purple', bgClass: 'bg-purple-500', borderClass: 'border-purple-600', hex: '#d500f9' },
         { name: 'Gray', bgClass: 'bg-gray-500', borderClass: 'border-gray-600', hex: '#8d6e63' },
+        { name: 'White', bgClass: 'bg-white', borderClass: 'border-gray-300', hex: '#ffffff' },
     ];
 
     const closeAllDropdowns = () => {
@@ -144,7 +147,7 @@ function NoteDown({
                                 <h3 className="text-sm font-medium text-gray-700 mb-2">Remind me</h3>
                                 <p className="text-xs text-gray-500 mb-3">Saved in Google Reminders</p>
                                 <div className="space-y-1">
-                                    <DropdownItem icon={Clock}>Later today, 8:00 PM</DropdownItem>
+                                    <DropdownItem icon={Clock}>today, 8:00 PM</DropdownItem>
                                     <DropdownItem icon={Clock}>Tomorrow, 8:00 AM</DropdownItem>
                                     <DropdownItem icon={Clock}>Next week, Mon, 8:00 AM</DropdownItem>
                                     <DropdownItem icon={Clock}>Pick date & time</DropdownItem>
@@ -175,7 +178,7 @@ function NoteDown({
                                         <p className="text-xs text-gray-500">user@example.com</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 border-t pt-3">
+                                <div className="flex items-center gap-2 border-t pt-3 cursor-pointer">
                                     <UserPlus size={20} className="text-gray-600" />
                                     <input
                                         type="email"
@@ -184,7 +187,7 @@ function NoteDown({
                                     />
                                 </div>
                                 <div className="flex justify-end gap-2 mt-4">
-                                    <button className="px-4 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                                    <button onClick={onClose} className="px-4 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
                                     <button className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
                                 </div>
                             </div>
